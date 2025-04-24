@@ -114,7 +114,7 @@ Cette commande crée un exécutable autonome qui recherchera le fichier config.i
 
 ## miniDNS en service
 
-Si vous souhaitez utiliser ce programme en service sou swindows, installez-le à l'aide de NSSM https://nssm.cc/download, c'est simple et rapide.
+Si vous souhaitez utiliser ce programme en service sous windows, installez-le à l'aide de NSSM https://nssm.cc/download, c'est simple et rapide.
 
 -Executez nssm install nomdevotreservice
 
