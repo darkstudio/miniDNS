@@ -1,0 +1,12 @@
+# Localhost entries
+127.0.0.1       localhost
+#::1             localhost
+
+# Custom host entries
+192.168.1.10    exemple.com www.exemple.com
+192.168.1.20    test.local
+192.168.1.30    mon-serveur.local
+10.0.0.53       serveur-interne.local  # Serveur interne
+
+# Service entries
+192.168.1.100   db.local redis.local cache.local
