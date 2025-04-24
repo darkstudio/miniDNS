@@ -101,8 +101,8 @@ class DNSServer:
         
         # Récupération des serveurs DNS
         if 'DNS' in config:
-            self.primary_dns = config['DNS'].get('primary', '8.8.8.8')
-            self.secondary_dns = config['DNS'].get('secondary', '8.8.4.4')
+            self.primary_dns = config['DNS'].get('primary', '8.8.8.8').strip()
+            self.secondary_dns = config['DNS'].get('secondary', '8.8.4.4').strip()
             logger.info(f"Serveurs DNS configurés : primaire={self.primary_dns}, secondaire={self.secondary_dns}")
         else:
             self.primary_dns = '8.8.8.8'  # Google DNS par défaut
@@ -114,8 +114,13 @@ class DNSServer:
             # Chemin vers le fichier hosts (local ou URL)
             hosts_path = config['HOSTS_CONFIG'].get('path', None)
             if hosts_path:
-                # Nettoyer l'URL ou le chemin de fichier
-                self.hosts_file = hosts_path.strip()
+                # Nettoyer et traiter la chaîne de caractères
+                raw_path = hosts_path.strip()
+                # Supprimer les commentaires éventuels
+                if '#' in raw_path:
+                    raw_path = raw_path[:raw_path.find('#')].strip()
+                
+                self.hosts_file = raw_path
                 logger.info(f"Fichier hosts configuré : {self.hosts_file}")
             else:
                 self.hosts_file = None
@@ -123,7 +128,7 @@ class DNSServer:
             
             # Intervalle de rechargement du fichier hosts
             try:
-                self.reload_interval = int(config['HOSTS_CONFIG'].get('reload_interval', '0'))
+                self.reload_interval = int(config['HOSTS_CONFIG'].get('reload_interval', '0').strip())
                 if self.reload_interval > 0:
                     logger.info(f"Intervalle de rechargement du fichier hosts : {self.reload_interval} secondes")
                 else:
@@ -144,12 +149,12 @@ class DNSServer:
             
         if self.is_url(self.hosts_file):
             try:
-                # Nettoyer l'URL en supprimant les espaces et caractères de contrôle
-                cleaned_url = self.hosts_file.strip()
-                logger.info(f"Téléchargement du fichier hosts depuis {cleaned_url}")
-                with urllib.request.urlopen(cleaned_url, timeout=10) as response:
+                # Extraire l'URL proprement sans le commentaire
+                url = self.hosts_file.split('#')[0].strip()
+                logger.info(f"Téléchargement du fichier hosts depuis {url}")
+                with urllib.request.urlopen(url, timeout=10) as response:
                     content = response.read().decode('utf-8')
-                logger.info(f"Fichier hosts téléchargé avec succès depuis {cleaned_url}")
+                logger.info(f"Fichier hosts téléchargé avec succès depuis {url}")
                 return content.splitlines()
             except urllib.error.URLError as e:
                 logger.error(f"Erreur lors du téléchargement du fichier hosts: {e}")
