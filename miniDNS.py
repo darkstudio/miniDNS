@@ -89,80 +89,85 @@ class DNSServer:
         if self.hosts_file:
             self.load_hosts()
         
-    def load_config(self):
-        """Charge la configuration depuis le fichier config.ini"""
-        if not os.path.exists(self.config_file):
-            logger.error(f"Le fichier de configuration {self.config_file} n'existe pas!")
-            raise FileNotFoundError(f"Le fichier {self.config_file} n'existe pas!")
+def load_config(self):
+    """Charge la configuration depuis le fichier config.ini"""
+    if not os.path.exists(self.config_file):
+        logger.error(f"Le fichier de configuration {self.config_file} n'existe pas!")
+        raise FileNotFoundError(f"Le fichier {self.config_file} n'existe pas!")
             
-        config = configparser.ConfigParser()
-        config.read(self.config_file)
+    config = configparser.ConfigParser()
+    config.read(self.config_file)
         
-        # Récupération des serveurs DNS
-        if 'DNS' in config:
-            self.primary_dns = config['DNS'].get('primary', '8.8.8.8')
-            self.secondary_dns = config['DNS'].get('secondary', '8.8.4.4')
-            logger.info(f"Serveurs DNS configurés : primaire={self.primary_dns}, secondaire={self.secondary_dns}")
+    # Récupération des serveurs DNS
+    if 'DNS' in config:
+        self.primary_dns = config['DNS'].get('primary', '8.8.8.8')
+        self.secondary_dns = config['DNS'].get('secondary', '8.8.4.4')
+        logger.info(f"Serveurs DNS configurés : primaire={self.primary_dns}, secondaire={self.secondary_dns}")
+    else:
+        self.primary_dns = '8.8.8.8'  # Google DNS par défaut
+        self.secondary_dns = '8.8.4.4'
+        logger.warning("Section DNS non trouvée, utilisation des serveurs par défaut")
+        
+    # Récupération des paramètres de configuration du fichier hosts
+    if 'HOSTS_CONFIG' in config:
+        # Chemin vers le fichier hosts (local ou URL)
+        hosts_path = config['HOSTS_CONFIG'].get('path', None)
+        if hosts_path:
+            # Nettoyer l'URL ou le chemin de fichier
+            self.hosts_file = hosts_path.strip()
+            logger.info(f"Fichier hosts configuré : {self.hosts_file}")
         else:
-            self.primary_dns = '8.8.8.8'  # Google DNS par défaut
-            self.secondary_dns = '8.8.4.4'
-            logger.warning("Section DNS non trouvée, utilisation des serveurs par défaut")
-        
-        # Récupération des paramètres de configuration du fichier hosts
-        if 'HOSTS_CONFIG' in config:
-            # Chemin vers le fichier hosts (local ou URL)
-            self.hosts_file = config['HOSTS_CONFIG'].get('path', None)
-            if self.hosts_file:
-                logger.info(f"Fichier hosts configuré : {self.hosts_file}")
-            else:
-                logger.info("Aucun fichier hosts configuré")
+            self.hosts_file = None
+            logger.info("Aucun fichier hosts configuré")
             
-            # Intervalle de rechargement du fichier hosts
-            try:
-                self.reload_interval = int(config['HOSTS_CONFIG'].get('reload_interval', '0'))
-                if self.reload_interval > 0:
-                    logger.info(f"Intervalle de rechargement du fichier hosts : {self.reload_interval} secondes")
-                else:
-                    logger.info("Rechargement automatique du fichier hosts désactivé")
-            except ValueError:
-                logger.warning("Valeur d'intervalle de rechargement invalide, désactivation du rechargement automatique")
-                self.reload_interval = 0
+        # Intervalle de rechargement du fichier hosts
+        try:
+            self.reload_interval = int(config['HOSTS_CONFIG'].get('reload_interval', '0'))
+            if self.reload_interval > 0:
+                logger.info(f"Intervalle de rechargement du fichier hosts : {self.reload_interval} secondes")
+            else:
+                logger.info("Rechargement automatique du fichier hosts désactivé")
+        except ValueError:
+            logger.warning("Valeur d'intervalle de rechargement invalide, désactivation du rechargement automatique")
+            self.reload_interval = 0
     
     def is_url(self, path):
         """Vérifie si le chemin donné est une URL"""
         return path and path.startswith(('http://', 'https://'))
     
-    def read_hosts_content(self):
-        """Lit le contenu du fichier hosts, que ce soit depuis un fichier local ou une URL"""
-        if not self.hosts_file:
-            logger.warning("Aucun fichier hosts configuré")
-            return []
+def read_hosts_content(self):
+    """Lit le contenu du fichier hosts, que ce soit depuis un fichier local ou une URL"""
+    if not self.hosts_file:
+        logger.warning("Aucun fichier hosts configuré")
+        return []
             
-        if self.is_url(self.hosts_file):
-            try:
-                logger.info(f"Téléchargement du fichier hosts depuis {self.hosts_file}")
-                with urllib.request.urlopen(self.hosts_file, timeout=10) as response:
-                    content = response.read().decode('utf-8')
-                logger.info(f"Fichier hosts téléchargé avec succès depuis {self.hosts_file}")
-                return content.splitlines()
-            except urllib.error.URLError as e:
-                logger.error(f"Erreur lors du téléchargement du fichier hosts: {e}")
-                return []
-            except Exception as e:
-                logger.error(f"Erreur inattendue lors du téléchargement du fichier hosts: {e}")
-                return []
-        else:
-            # Fichier local
-            if not os.path.exists(self.hosts_file):
-                logger.warning(f"Le fichier hosts {self.hosts_file} n'existe pas. Aucun mapping local ne sera utilisé.")
-                return []
+    if self.is_url(self.hosts_file):
+        try:
+            # Nettoyer l'URL en supprimant les espaces et caractères de contrôle
+            cleaned_url = self.hosts_file.strip()
+            logger.info(f"Téléchargement du fichier hosts depuis {cleaned_url}")
+            with urllib.request.urlopen(cleaned_url, timeout=10) as response:
+                content = response.read().decode('utf-8')
+            logger.info(f"Fichier hosts téléchargé avec succès depuis {cleaned_url}")
+            return content.splitlines()
+        except urllib.error.URLError as e:
+            logger.error(f"Erreur lors du téléchargement du fichier hosts: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Erreur inattendue lors du téléchargement du fichier hosts: {e}")
+            return []
+    else:
+        # Fichier local
+        if not os.path.exists(self.hosts_file):
+            logger.warning(f"Le fichier hosts {self.hosts_file} n'existe pas. Aucun mapping local ne sera utilisé.")
+            return []
                 
-            try:
-                with open(self.hosts_file, 'r', encoding='utf-8') as f:
-                    return f.readlines()
-            except Exception as e:
-                logger.error(f"Erreur lors de la lecture du fichier hosts: {e}")
-                return []
+        try:
+            with open(self.hosts_file, 'r', encoding='utf-8') as f:
+                return f.readlines()
+        except Exception as e:
+            logger.error(f"Erreur lors de la lecture du fichier hosts: {e}")
+            return []
     
     def load_hosts(self):
         """Charge les mappages depuis le fichier hosts au format Windows (local ou URL)"""
