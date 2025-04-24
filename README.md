@@ -118,7 +118,7 @@ Si vous souhaitez utiliser ce programme en service sou swindows, installez-le à
 
 -Executez nssm install nomdevotreservice
 
--Suivez les instruction en pointant l'executable miniDNS.exe
+-Suivez les instructions en pointant l'executable miniDNS.exe
 
 ## Dépannage
 
