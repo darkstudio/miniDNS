@@ -1,5 +1,5 @@
 
-# MiniDNS - Serveur DNS Léger
+# MiniDNS - Serveur DNS Léger local
 
 MiniDNS est un serveur DNS léger et configurable écrit en Python. Il permet de gérer des requêtes DNS en utilisant un fichier hosts local ou distant, avec transfert vers des serveurs DNS externes pour les domaines non résolus localement.
 
