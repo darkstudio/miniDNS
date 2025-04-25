@@ -1,6 +1,5 @@
 # Localhost entries
 127.0.0.1       localhost
-#::1             localhost
 
 # Custom host entries
 192.168.1.10    exemple.com www.exemple.com
