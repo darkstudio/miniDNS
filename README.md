@@ -22,8 +22,8 @@ MiniDNS est un serveur DNS léger et configurable écrit en Python. Il permet de
 
 1. Clonez ce dépôt :
    ```
-   git clone https://github.com/votre-username/minidns.git
-   cd minidns
+   git clone https://github.com/darkstudio/miniDNS.git
+   cd miniDNS
    ```
 
 2. Exécutez directement le script :
